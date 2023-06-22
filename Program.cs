@@ -1,5 +1,7 @@
 ﻿
 
+using Microsoft.EntityFrameworkCore;
+
 using var db = new BloggingContext();
 
 db.Database.EnsureCreated();
@@ -19,22 +21,51 @@ var comment2 = new Comment { Content = "I enjoyed reading this !",BlogId=blog.Id
 db.Comments.AddRange(comment1, comment2);
 db.SaveChanges();
 
-var b = db.Blogs.FirstOrDefault(); // Retrieve a blog post
 
-if (b != null)
+// User 1 edits the blog post
+using (var context1 = new BloggingContext())
 {
-    Console.WriteLine($"Title: {b.Title}");
-    Console.WriteLine($"Content: {b.Content}");
-    Console.WriteLine("Comments:");
-
-    // Access the comments collection to trigger lazy loading
-    foreach (var comment in b.Comments)
+    var blog1 = context1.Blogs.FirstOrDefault();
+    if (blog1 != null)
     {
-        Console.WriteLine($"- {comment.Content}");
+        // Perform the desired edits
+        blog1.Title = "Updated Title by User 1";
+        blog1.Content = "Updated Content by User 1";
+
+        context1.SaveChanges();
     }
 }
-//In this code, the blog post is retrieved using FirstOrDefault, but the comments are not loaded immediately. 
-// When you access the Comments collection within the foreach loop, lazy loading is triggered,
-// and the associated comments are loaded from the database at that point.
+// Introduce a delay before User 2 edits the same blog post
+await Task.Delay(TimeSpan.FromSeconds(2));
+// User 2 edits the same blog post
+using (var context2 = new BloggingContext())
+{
+    var blog2 = context2.Blogs.FirstOrDefault();
+    if (blog2 != null)
+    {
+        // Perform the desired edits
+        blog2.Title = "Updated Title by User 2";
+        blog2.Content = "Updated Content by User 2";
+
+        try
+        {
+            context2.SaveChanges();
+        }
+        catch (DbUpdateConcurrencyException ex)
+        {
+            var entry = ex.Entries.FirstOrDefault();
+            if (entry != null)
+            {
+                var databaseValues = entry.GetDatabaseValues();
+                var currentTitle = databaseValues.GetValue<string>("Title");
+                var currentContent = databaseValues.GetValue<string>("Content");
+
+                Console.WriteLine("Concurrency conflict occurred!");
+                Console.WriteLine($"Current Title: {currentTitle}");
+                Console.WriteLine($"Current Content: {currentContent}");
+            }
+        }
+    }
+}
 
 

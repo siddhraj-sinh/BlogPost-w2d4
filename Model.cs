@@ -25,6 +25,9 @@ public class BloggingContext : DbContext
         modelBuilder.Entity<Blog>().ToTable("MyBlogs");
 
         //modelBuilder.Entity<Blog>().HasMany(b => b.Comments).WithOne(c => c.Blog).HasForeignKey(c => c.BlogId);
+        modelBuilder.Entity<Blog>()
+        .Property(b => b.ConcurrencyToken)
+        .IsConcurrencyToken();
     }
 }
 
@@ -34,6 +37,7 @@ public class Blog
     public string Title { get; set; }
     public string Content { get; set; }
     public virtual List<Comment> Comments { get; set; }
+    public string ConcurrencyToken { get; set; } = Guid.NewGuid().ToString();
 }
 
 public class Comment
