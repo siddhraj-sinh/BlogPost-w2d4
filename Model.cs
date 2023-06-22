@@ -12,7 +12,7 @@ public class BloggingContext : DbContext
     {
         var folder = Environment.SpecialFolder.LocalApplicationData;
         var path = Environment.GetFolderPath(folder);
-        DbPath = System.IO.Path.Join(path, "blog.db");
+        DbPath = System.IO.Path.Join(path, "blog-exercise4.db");
     }
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {
